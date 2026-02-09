@@ -1,0 +1,47 @@
+name: CI Workflow
+
+# on: [push, pull_request]
+on: [repository_dispatch, workflow_dispatch]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip wheel
+          if [[ 'full' == 'full' ]]; then EXTRAS=',stats'; fi
+          if [[ 'latest' == 'pinned' ]]; then DEPS='-r ci/deps_pinned.txt'; fi
+          pip install .[dev$EXTRAS] $DEPS
+      
+      - name: Run tests
+        run: make test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      
+      - name: Install dependencies
+        run: |
+          pip install mypy~=1.10.0 flake8
+      
+      - name: Run linting
+        run: make lint
+      
+      - name: Run type checking
+        run: make typecheck
